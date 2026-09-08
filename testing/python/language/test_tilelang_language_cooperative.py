@@ -32,7 +32,10 @@ def test_grid_sync():
     assert "cooperative_groups::this_grid().sync()" in kernel.get_kernel_source()
     tensor = torch.rand((N), dtype=torch.float32, device="cuda")
     kernel(tensor)
-    target = torch.full_like(tensor, tensor[0])
+    # Each element is written as its own index, then adds its mirrored index,
+    # so a correctly synchronized grid leaves every element at (N - 1). Asserting
+    # the value rather than tensor[0] keeps a uniformly wrong result from passing.
+    target = torch.full_like(tensor, N - 1)
     torch.testing.assert_close(tensor, target)
 
 
@@ -64,7 +67,10 @@ def test_global_sync():
     assert "cooperative_groups::this_grid().sync()" in kernel.get_kernel_source()
     tensor = torch.rand((N), dtype=torch.float32, device="cuda")
     kernel(tensor)
-    target = torch.full_like(tensor, tensor[0])
+    # Each element is written as its own index, then adds its mirrored index,
+    # so a correctly synchronized grid leaves every element at (N - 1). Asserting
+    # the value rather than tensor[0] keeps a uniformly wrong result from passing.
+    target = torch.full_like(tensor, N - 1)
     torch.testing.assert_close(tensor, target)
 
 
